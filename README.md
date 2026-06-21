@@ -39,3 +39,6 @@ firebase deploy --project financeiro-cccab
 
 Arquivos de credenciais, caches e logs locais estão protegidos pelo `.gitignore`.
 
+## Colaboracao
+
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) para configurar outro computador e trabalhar no projeto com o Codex sem sobrescrever alteracoes.
