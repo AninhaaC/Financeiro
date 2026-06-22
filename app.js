@@ -640,13 +640,14 @@ function renderDashboardAlerts(forecast, monthDate) {
   const alerts = [];
   const todayKey = localDateKey(today);
   ["Assai", "Inter", "Nubank"].forEach((bankName) => {
+    const summary = getBankSummary(bankName, selectedMonthKey);
     const cycle = getBankCycleDates(bankName, selectedMonthKey);
     const isPaymentWindow = todayKey >= cycle.closingDate && todayKey <= cycle.dueDate;
     if (isPaymentWindow && getBankInvoiceStatus(bankName, selectedMonthKey) === "pending") {
       const bankLabel = bankName === "Assai" ? "Assaí" : bankName;
       alerts.push({
-        title: "CARTÃO PENDENTE",
-        detail: `Fatura cartão ${bankLabel} vence em ${dateBR(cycle.dueDate)}.`,
+        title: `Fatura ${bankLabel} pendente`,
+        detail: `${money(summary.expense)} com vencimento em ${dateBR(cycle.dueDate)}.`,
       });
     }
   });
