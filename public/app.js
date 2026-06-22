@@ -410,8 +410,7 @@ function getBankCycleDates(bankName, monthKey) {
   return { closingDate, dueDate };
 }
 
-function setRecurringBankCycle(bankName, closingDate, dueDate) {
-  const referenceMonth = selectedBankMonth;
+function setRecurringBankCycle(bankName, referenceMonth, closingDate, dueDate) {
   const closingMonth = closingDate.slice(0, 7);
   const dueMonth = dueDate.slice(0, 7);
   data.bankCardSettings[bankName] = {
@@ -1503,10 +1502,12 @@ function openBankActionMenu(button) {
 function openEditBank(bankName) {
   const dialog = document.querySelector("#editBankDialog");
   const form = document.querySelector("#editBankForm");
-  const cycle = getBankCycleDates(bankName, selectedBankMonth);
-  const firstAllowedDate = dateForMonthDay(selectedBankMonth, 1);
-  const lastAllowedDate = dateForMonthDay(monthKeyOffset(selectedBankMonth, 1), 31);
+  const referenceMonth = selectedBankMonth;
+  const cycle = getBankCycleDates(bankName, referenceMonth);
+  const firstAllowedDate = dateForMonthDay(referenceMonth, 1);
+  const lastAllowedDate = dateForMonthDay(monthKeyOffset(referenceMonth, 1), 31);
   form.elements.bank.value = bankName;
+  form.elements.referenceMonth.value = referenceMonth;
   form.elements.closingDate.min = firstAllowedDate;
   form.elements.closingDate.max = lastAllowedDate;
   form.elements.dueDate.min = firstAllowedDate;
@@ -1802,7 +1803,8 @@ document.querySelector("#editBankForm").addEventListener("submit", (event) => {
     form.elements.dueDate.reportValidity();
     return;
   }
-  setRecurringBankCycle(values.bank, values.closingDate, values.dueDate);
+  const referenceMonth = values.referenceMonth || form.elements.closingDate.min.slice(0, 7);
+  setRecurringBankCycle(values.bank, referenceMonth, values.closingDate, values.dueDate);
   saveData();
   form.closest("dialog").close();
   renderAll();
