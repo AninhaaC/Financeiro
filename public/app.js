@@ -720,10 +720,10 @@ function renderMonthlyTransactionTable(monthKey, rows) {
             <th>Pagamento</th>
             <th>Parcelado</th>
             <th>Qtde.</th>
-            <th>Parcela atual</th>
+            <th>Parcela</th>
             <th>Status</th>
             <th>Recorrente</th>
-            <th>Gastos por terceiro</th>
+            <th>Terceiro</th>
             <th>Nome</th>
           </tr>
         </thead>

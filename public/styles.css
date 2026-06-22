@@ -1440,10 +1440,10 @@ body.dark-mode .budget-row-over {
 .finance-table .action-column {
   position: sticky;
   left: 0;
-  width: 52px;
-  min-width: 52px;
-  max-width: 52px;
-  padding: 0 8px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  padding: 0 2px;
   text-align: center;
 }
 
@@ -1454,7 +1454,7 @@ body.dark-mode .budget-row-over {
 
 .finance-table td.action-column {
   z-index: 2;
-  background: var(--panel);
+  background: #f8faf9;
   box-shadow: 1px 0 0 var(--line);
 }
 
@@ -1500,7 +1500,7 @@ body.dark-mode .budget-row-over {
 }
 
 .finance-table tbody tr.third-party-row td.action-column {
-  background: #e8f4fb;
+  background: #f8faf9;
   box-shadow: inset 4px 0 0 #29a3d6, 1px 0 0 var(--line);
 }
 
@@ -1514,17 +1514,17 @@ body.dark-mode .finance-table th.action-column {
 }
 
 body.dark-mode .finance-table td.action-column {
-  background: var(--panel);
+  background: #222a27;
 }
 
 body.dark-mode .finance-table tbody tr.third-party-row td.action-column {
-  background: #17313d;
+  background: #222a27;
 }
 
 .row-menu-button {
   display: grid;
   place-items: center;
-  width: 34px;
+  width: 30px;
   height: 34px;
   border: 0;
   border-radius: 8px;
