@@ -46,6 +46,7 @@ const paymentChartColors = {
   Outros: "#607D8B",
 };
 const fixedReserveGoalId = "fixed-reserve-goal";
+const motherThirdPartyFilter = "third-party:mae";
 const financialDataResetVersion = 1;
 const today = new Date();
 const year = today.getFullYear();
@@ -744,9 +745,12 @@ function renderTransactions() {
 }
 
 function renderTransactionCategoryFilter() {
+  const filterLabel = selectedTransactionCategory === motherThirdPartyFilter
+    ? "Mãe"
+    : selectedTransactionCategory;
   const label = selectedTransactionCategory === "all"
     ? "Filtro"
-    : `Filtro: ${selectedTransactionCategory}`;
+    : `Filtro: ${filterLabel}`;
 
   return `<label class="transaction-filter ${selectedTransactionCategory === "all" ? "" : "is-filtered"}">
     <span>${label}</span>
@@ -755,6 +759,7 @@ function renderTransactionCategoryFilter() {
       ${financialCategories.map((category) => `
         <option value="${category}" ${category === selectedTransactionCategory ? "selected" : ""}>${category}</option>
       `).join("")}
+      <option value="${motherThirdPartyFilter}" ${selectedTransactionCategory === motherThirdPartyFilter ? "selected" : ""}>Mãe</option>
     </select>
   </label>`;
 }
@@ -771,13 +776,21 @@ function renderTransactionMonthTab(monthKey, rows) {
 }
 
 function renderMonthlyTransactionTable(monthKey, rows) {
+  const isMotherFilter = selectedTransactionCategory === motherThirdPartyFilter;
   const visibleRows = selectedTransactionCategory === "all"
     ? rows
-    : rows.filter((item) => transactionMatchesBudgetCategory(item.category, selectedTransactionCategory));
+    : isMotherFilter
+      ? rows.filter((item) =>
+        item.thirdParty === "Sim" &&
+        normalizeCategoryName(item.thirdPartyName) === normalizeCategoryName("Mãe")
+      )
+      : rows.filter((item) => transactionMatchesBudgetCategory(item.category, selectedTransactionCategory));
   const monthDate = new Date(`${monthKey}-01T12:00:00`);
   const monthLabel = monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const income = sum(visibleRows, (item) => item.type === "income");
-  const expense = sum(visibleRows, isCountableExpense);
+  const expense = sum(visibleRows, isMotherFilter
+    ? (item) => item.type === "expense"
+    : isCountableExpense);
   const pending = visibleRows.filter((item) => item.status === "pending").length;
 
   return `<section class="monthly-table-section">
@@ -788,7 +801,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
       </div>
       <div class="monthly-table-totals">
         <span class="month-total income">Entradas: ${money(income)}</span>
-        <span class="month-total expense">Saidas: ${money(expense)}</span>
+        <span class="month-total expense">${isMotherFilter ? "A receber" : "Saidas"}: ${money(expense)}</span>
         <span class="month-total pending">${pending} ${pending === 1 ? "pendente" : "pendentes"}</span>
         ${renderTransactionCategoryFilter()}
       </div>
