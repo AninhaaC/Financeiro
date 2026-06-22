@@ -1884,9 +1884,9 @@ tbody tr:hover {
 
 .bank-card {
   position: relative;
-  min-height: 310px;
+  min-height: 230px;
   overflow: hidden;
-  padding: 22px;
+  padding: 18px;
   border-radius: 8px;
   color: #fff;
   box-shadow: 0 18px 42px rgba(32, 41, 39, 0.15);
@@ -1919,10 +1919,10 @@ tbody tr:hover {
   content: "";
   position: absolute;
   right: -42px;
-  bottom: -72px;
-  width: 190px;
-  height: 190px;
-  border: 34px solid rgba(255, 255, 255, 0.1);
+  bottom: -88px;
+  width: 170px;
+  height: 170px;
+  border: 30px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
 }
 
@@ -1989,7 +1989,7 @@ tbody tr:hover {
 .bank-card-balance {
   position: relative;
   z-index: 1;
-  margin: 42px 0 0;
+  margin: 24px 0 0;
 }
 
 .bank-card-dates {
@@ -1998,7 +1998,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin-top: 28px;
+  margin-top: 18px;
 }
 
 .bank-card-dates span,
@@ -2007,7 +2007,7 @@ tbody tr:hover {
 }
 
 .bank-card-dates span {
-  min-height: 30px;
+  min-height: 26px;
   opacity: 0.78;
   font-size: 0.68rem;
   font-weight: 700;
