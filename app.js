@@ -94,6 +94,7 @@ const sampleData = {
 
 let data = loadData();
 let activeTransactionMonth = `${year}-${month}`;
+let selectedTransactionCategory = "all";
 let selectedBankMonth = `${year}-${month}`;
 let selectedPlanningMonth = `${year}-${month}`;
 let selectedAnnualYear = year;
@@ -641,10 +642,35 @@ function renderTransactions() {
       </div>
       <button class="month-tabs-arrow" type="button" data-month-scroll="1" aria-label="Ver proximos meses">&#8250;</button>
     </div>
+    ${renderTransactionCategoryFilter()}
     ${renderMonthlyTransactionTable(activeTransactionMonth, monthlyGroups[activeTransactionMonth])}`;
   requestAnimationFrame(() => {
     document.querySelector(`[data-transaction-month="${activeTransactionMonth}"]`)?.scrollIntoView({ behavior: "instant", block: "nearest", inline: "center" });
   });
+}
+
+function renderTransactionCategoryFilter() {
+  const categories = [...new Set(data.transactions.map((item) => item.category).filter(Boolean))]
+    .sort((categoryA, categoryB) => categoryA.localeCompare(categoryB, "pt-BR"));
+  const activeLabel = selectedTransactionCategory === "all" ? "Filtro" : `Filtro: ${selectedTransactionCategory}`;
+
+  return `<details class="transaction-filter">
+    <summary>${activeLabel}</summary>
+    <div class="transaction-filter-panel">
+      <label>
+        <span>Categoria</span>
+        <select id="transactionCategoryFilter">
+          <option value="all">Todas as categorias</option>
+          ${categories.map((category) => `
+            <option value="${category}" ${category === selectedTransactionCategory ? "selected" : ""}>${category}</option>
+          `).join("")}
+        </select>
+      </label>
+      <button class="ghost-btn" type="button" data-clear-transaction-filter ${selectedTransactionCategory === "all" ? "disabled" : ""}>
+        Limpar filtro
+      </button>
+    </div>
+  </details>`;
 }
 
 function renderTransactionMonthTab(monthKey, rows) {
@@ -659,17 +685,20 @@ function renderTransactionMonthTab(monthKey, rows) {
 }
 
 function renderMonthlyTransactionTable(monthKey, rows) {
+  const visibleRows = selectedTransactionCategory === "all"
+    ? rows
+    : rows.filter((item) => item.category === selectedTransactionCategory);
   const monthDate = new Date(`${monthKey}-01T12:00:00`);
   const monthLabel = monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const income = sum(rows, (item) => item.type === "income");
-  const expense = sum(rows, (item) => item.type === "expense");
-  const pending = rows.filter((item) => item.status === "pending").length;
+  const income = sum(visibleRows, (item) => item.type === "income");
+  const expense = sum(visibleRows, (item) => item.type === "expense");
+  const pending = visibleRows.filter((item) => item.status === "pending").length;
 
   return `<section class="monthly-table-section">
     <div class="monthly-table-head">
       <div class="monthly-table-title">
         <strong>${monthLabel}</strong>
-        <span>${rows.length} ${rows.length === 1 ? "lancamento" : "lancamentos"}</span>
+        <span>${visibleRows.length} ${visibleRows.length === 1 ? "lancamento" : "lancamentos"}</span>
       </div>
       <div class="monthly-table-totals">
         <span class="month-total income">Entradas: ${money(income)}</span>
@@ -697,7 +726,10 @@ function renderMonthlyTransactionTable(monthKey, rows) {
             <th></th>
           </tr>
         </thead>
-        <tbody>${rows.map(renderTransactionRow).join("")}</tbody>
+        <tbody>${visibleRows.length
+          ? visibleRows.map(renderTransactionRow).join("")
+          : '<tr><td class="filtered-empty-state" colspan="14">Nenhum lancamento nesta categoria para o mes selecionado.</td></tr>'
+        }</tbody>
       </table>
     </div>
   </section>`;
@@ -1345,8 +1377,14 @@ document.addEventListener("click", (event) => {
   const goalActionButton = event.target.closest("[data-goal-action]");
   const budgetMenuButton = event.target.closest("[data-budget-menu]");
   const budgetActionButton = event.target.closest("[data-budget-action]");
+  const clearTransactionFilterButton = event.target.closest("[data-clear-transaction-filter]");
   if (tabButton) switchTab(tabButton.dataset.tab);
   if (jumpButton) switchTab(jumpButton.dataset.jump);
+  if (clearTransactionFilterButton) {
+    selectedTransactionCategory = "all";
+    renderTransactions();
+    return;
+  }
   if (rowMenuButton) {
     event.stopPropagation();
     openRowActionMenu(rowMenuButton);
@@ -1726,6 +1764,11 @@ document.querySelector("#recurringSelect").addEventListener("change", updateInst
 document.querySelector("#transactionForm").elements.amount.addEventListener("input", updateInstallmentFields);
 
 document.addEventListener("change", (event) => {
+  if (event.target.matches("#transactionCategoryFilter")) {
+    selectedTransactionCategory = event.target.value;
+    renderTransactions();
+    return;
+  }
   const statusSelect = event.target.closest("[data-status-id]");
   if (!statusSelect) return;
   const transaction = data.transactions.find((item) => item.id === statusSelect.dataset.statusId);
