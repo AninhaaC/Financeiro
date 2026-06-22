@@ -115,16 +115,33 @@ function normalizeLoadedData(loaded) {
   loaded.recurringStops ||= {};
   loaded.bankCardSettings ||= {};
   loaded.bankInvoiceStatuses ||= {};
+  const bankCycleDefaults = {
+    Assai: { closingDay: 2, closingMonthOffset: 1, dueDay: 8, dueMonthOffset: 1 },
+    Inter: { closingDay: 28, closingMonthOffset: 0, dueDay: 6, dueMonthOffset: 1 },
+    Nubank: { closingDay: 4, closingMonthOffset: 1, dueDay: 11, dueMonthOffset: 1 },
+  };
+  const needsBankCycleMigration = loaded.bankCycleVersion !== 3;
   ["Assai", "Inter", "Nubank"].forEach((bank) => {
     const settings = loaded.bankCardSettings[bank] || {};
+    const defaults = bankCycleDefaults[bank];
     loaded.bankCardSettings[bank] = {
-      closingDay: Math.min(31, Math.max(1, Number(settings.closingDay || 20))),
-      dueDay: Math.min(31, Math.max(1, Number(settings.dueDay || 27))),
-      dueMonthOffset: Math.min(1, Math.max(0, Number(settings.dueMonthOffset || 0))),
+      closingDay: needsBankCycleMigration
+        ? defaults.closingDay
+        : Math.min(31, Math.max(1, Number(settings.closingDay || defaults.closingDay))),
+      closingMonthOffset: needsBankCycleMigration
+        ? defaults.closingMonthOffset
+        : Math.min(1, Math.max(0, Number(settings.closingMonthOffset ?? defaults.closingMonthOffset))),
+      dueDay: needsBankCycleMigration
+        ? defaults.dueDay
+        : Math.min(31, Math.max(1, Number(settings.dueDay || defaults.dueDay))),
+      dueMonthOffset: needsBankCycleMigration
+        ? defaults.dueMonthOffset
+        : Math.min(1, Math.max(0, Number(settings.dueMonthOffset ?? defaults.dueMonthOffset))),
       recurring: true,
     };
     loaded.bankInvoiceStatuses[bank] ||= {};
   });
+  loaded.bankCycleVersion = 3;
   loaded.transactions ||= [];
   loaded.goals ||= [];
   loaded.goalMovements ||= [];
@@ -386,29 +403,36 @@ function dateForMonthDay(monthKey, day) {
 
 function getBankCycleDates(bankName, monthKey) {
   const settings = data.bankCardSettings[bankName];
-  const closingDate = dateForMonthDay(monthKey, settings.closingDay);
+  const closingMonth = monthKeyOffset(monthKey, Number(settings.closingMonthOffset || 0));
+  const closingDate = dateForMonthDay(closingMonth, settings.closingDay);
   const dueMonth = monthKeyOffset(monthKey, Number(settings.dueMonthOffset || 0));
   const dueDate = dateForMonthDay(dueMonth, settings.dueDay);
   return { closingDate, dueDate };
 }
 
 function setRecurringBankCycle(bankName, closingDate, dueDate) {
+  const referenceMonth = selectedBankMonth;
   const closingMonth = closingDate.slice(0, 7);
   const dueMonth = dueDate.slice(0, 7);
   data.bankCardSettings[bankName] = {
     closingDay: Number(closingDate.slice(-2)),
+    closingMonthOffset: Math.min(1, Math.max(0, monthDifference(`${referenceMonth}-01`, `${closingMonth}-01`))),
     dueDay: Number(dueDate.slice(-2)),
-    dueMonthOffset: Math.min(1, Math.max(0, monthDifference(`${closingMonth}-01`, `${dueMonth}-01`))),
+    dueMonthOffset: Math.min(1, Math.max(0, monthDifference(`${referenceMonth}-01`, `${dueMonth}-01`))),
     recurring: true,
   };
 }
 
 function getTransactionInvoiceMonth(item, bankName) {
   const transactionMonth = item.date.slice(0, 7);
-  const closingDay = Number(data.bankCardSettings[bankName]?.closingDay || 20);
-  return Number(item.date.slice(-2)) > closingDay
-    ? monthKeyOffset(transactionMonth, 1)
-    : transactionMonth;
+  const settings = data.bankCardSettings[bankName] || {};
+  const closingDay = Number(settings.closingDay || 20);
+  const closingMonthOffset = Number(settings.closingMonthOffset || 0);
+  const transactionDay = Number(item.date.slice(-2));
+  const invoiceOffset = transactionDay <= closingDay
+    ? -closingMonthOffset
+    : 1 - closingMonthOffset;
+  return monthKeyOffset(transactionMonth, invoiceOffset);
 }
 
 function getBankInvoiceStatus(bankName, monthKey) {
@@ -1480,7 +1504,13 @@ function openEditBank(bankName) {
   const dialog = document.querySelector("#editBankDialog");
   const form = document.querySelector("#editBankForm");
   const cycle = getBankCycleDates(bankName, selectedBankMonth);
+  const firstAllowedDate = dateForMonthDay(selectedBankMonth, 1);
+  const lastAllowedDate = dateForMonthDay(monthKeyOffset(selectedBankMonth, 1), 31);
   form.elements.bank.value = bankName;
+  form.elements.closingDate.min = firstAllowedDate;
+  form.elements.closingDate.max = lastAllowedDate;
+  form.elements.dueDate.min = firstAllowedDate;
+  form.elements.dueDate.max = lastAllowedDate;
   form.elements.closingDate.value = cycle.closingDate;
   form.elements.dueDate.value = cycle.dueDate;
   dialog.showModal();
@@ -1766,6 +1796,12 @@ document.querySelector("#editBankForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const values = Object.fromEntries(new FormData(form).entries());
+  form.elements.dueDate.setCustomValidity("");
+  if (values.dueDate < values.closingDate) {
+    form.elements.dueDate.setCustomValidity("O vencimento deve ser igual ou posterior ao fechamento.");
+    form.elements.dueDate.reportValidity();
+    return;
+  }
   setRecurringBankCycle(values.bank, values.closingDate, values.dueDate);
   saveData();
   form.closest("dialog").close();
@@ -1774,6 +1810,10 @@ document.querySelector("#editBankForm").addEventListener("submit", (event) => {
 
 document.querySelectorAll("[data-close-bank-dialog]").forEach((button) => {
   button.addEventListener("click", () => document.querySelector("#editBankDialog").close());
+});
+
+document.querySelector('#editBankForm [name="dueDate"]').addEventListener("input", (event) => {
+  event.target.setCustomValidity("");
 });
 
 document.querySelector("#sidebarToggle").addEventListener("click", () => {
