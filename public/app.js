@@ -643,7 +643,7 @@ function renderDashboardAlerts(forecast, monthDate) {
     const summary = getBankSummary(bankName, selectedMonthKey);
     const cycle = getBankCycleDates(bankName, selectedMonthKey);
     const isPaymentWindow = todayKey >= cycle.closingDate && todayKey <= cycle.dueDate;
-    if (isPaymentWindow && getBankInvoiceStatus(bankName, selectedMonthKey) === "pending") {
+    if (summary.expense > 0 && isPaymentWindow && getBankInvoiceStatus(bankName, selectedMonthKey) === "pending") {
       const bankLabel = bankName === "Assai" ? "Assaí" : bankName;
       alerts.push({
         title: `Fatura ${bankLabel} pendente`,
