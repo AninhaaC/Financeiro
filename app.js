@@ -46,50 +46,22 @@ const paymentChartColors = {
   Outros: "#607D8B",
 };
 const fixedReserveGoalId = "fixed-reserve-goal";
+const financialDataResetVersion = 1;
 const today = new Date();
 const year = today.getFullYear();
 const month = String(today.getMonth() + 1).padStart(2, "0");
 let selectedMonthKey = `${year}-${month}`;
 
 const sampleData = {
-  accounts: [
-    { id: crypto.randomUUID(), name: "Banco Principal", type: "Conta corrente", balance: 4280 },
-    { id: crypto.randomUUID(), name: "Reserva", type: "Poupanca", balance: 9200 },
-    { id: crypto.randomUUID(), name: "Investimentos", type: "Investimento", balance: 15600 },
-  ],
-  transactions: [
-    { id: crypto.randomUUID(), date: `${year}-${month}-02`, type: "income", category: "Salario", description: "Recebimento mensal", account: "Banco Principal", payment: "Transferencia", amount: 7200 },
-    { id: crypto.randomUUID(), date: `${year}-${month}-04`, type: "expense", category: "Moradia", description: "Aluguel", account: "Banco Principal", payment: "Pix", amount: 1850 },
-    { id: crypto.randomUUID(), date: `${year}-${month}-07`, type: "expense", category: "Mercado", description: "Compras da semana", account: "Banco Principal", payment: "Credito", amount: 620 },
-    { id: crypto.randomUUID(), date: `${year}-${month}-10`, type: "expense", category: "Transporte", description: "Combustivel e app", account: "Banco Principal", payment: "Debito", amount: 340 },
-    { id: crypto.randomUUID(), date: `${year}-01-14`, type: "income", category: "Extra", description: "Projeto pontual", account: "Banco Principal", payment: "Transferencia", amount: 1600 },
-    { id: crypto.randomUUID(), date: `${year}-02-11`, type: "expense", category: "Saude", description: "Consultas", account: "Banco Principal", payment: "Pix", amount: 480 },
-  ],
-  goals: [
-    { id: crypto.randomUUID(), name: "Reserva de emergencia", target: 24000, saved: 14800, deadline: `${year}-12-31` },
-    { id: crypto.randomUUID(), name: "Viagem", target: 8000, saved: 2600, deadline: `${year}-10-20` },
-  ],
+  accounts: [],
+  transactions: [],
+  goals: [],
   goalMovements: [],
   wishlist: [],
-  budgets: [
-    { id: crypto.randomUUID(), category: "Moradia", planned: 2000 },
-    { id: crypto.randomUUID(), category: "Mercado", planned: 1200 },
-    { id: crypto.randomUUID(), category: "Transporte", planned: 650 },
-    { id: crypto.randomUUID(), category: "Lazer", planned: 500 },
-  ],
-  debts: [
-    { id: crypto.randomUUID(), name: "Cartao parcelado", creditor: "Banco Principal", total: 3600, paid: 2100, due: `${year}-${month}-18` },
-    { id: crypto.randomUUID(), name: "Financiamento", creditor: "Instituicao financeira", total: 12000, paid: 3500, due: `${year}-11-05` },
-  ],
-  monthlyPlans: {
-    [`${year}-${month}`]: {
-      previousRemainder: 1800,
-      viniciusSalary: 5200,
-      carolSalary: 4200,
-      bonus: 600,
-      otherIncome: 350,
-    },
-  },
+  budgets: [],
+  debts: [],
+  monthlyPlans: {},
+  financialDataResetVersion,
 };
 
 let data = loadData();
@@ -110,6 +82,20 @@ function loadData() {
 
 function normalizeLoadedData(loaded) {
   loaded ||= {};
+  if (Number(loaded.financialDataResetVersion || 0) < financialDataResetVersion) {
+    loaded.accounts = [];
+    loaded.transactions = [];
+    loaded.goals = [];
+    loaded.goalMovements = [];
+    loaded.wishlist = [];
+    loaded.budgets = [];
+    loaded.debts = [];
+    loaded.monthlyPlans = {};
+    loaded.recurringStops = {};
+    loaded.bankInvoiceStatuses = {};
+    loaded.reserveAnchor = { month: `${year}-${month}`, amount: 0 };
+    loaded.financialDataResetVersion = financialDataResetVersion;
+  }
   loaded.accounts ||= [];
   loaded.monthlyPlans ||= {};
   loaded.recurringStops ||= {};
