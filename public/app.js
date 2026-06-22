@@ -631,16 +631,22 @@ function renderDashboardAlerts(forecast, monthDate) {
     debt.currentInstallment < debt.installmentCount
   );
   const pendingTransactions = selectedMonthRows().filter((item) => isCountableExpense(item) && item.status === "pending");
-  const incompleteGoals = data.goals.filter((goal) => Number(goal.target) > 0 && goal.saved < goal.target);
+  const incompleteGoals = data.goals.filter((goal) =>
+    Number(goal.target) > 0 &&
+    Number(goal.saved) < Number(goal.target) &&
+    Boolean(goal.deadline) &&
+    new Date(`${goal.deadline}T23:59:59`) <= monthEnd
+  );
   const alerts = [];
+  const todayKey = localDateKey(today);
   ["Assai", "Inter", "Nubank"].forEach((bankName) => {
-    const summary = getBankSummary(bankName, selectedMonthKey);
     const cycle = getBankCycleDates(bankName, selectedMonthKey);
-    const invoiceClosed = new Date(`${cycle.closingDate}T23:59:59`) <= today;
-    if (summary.expense > 0 && invoiceClosed && getBankInvoiceStatus(bankName, selectedMonthKey) === "pending") {
+    const isPaymentWindow = todayKey >= cycle.closingDate && todayKey <= cycle.dueDate;
+    if (isPaymentWindow && getBankInvoiceStatus(bankName, selectedMonthKey) === "pending") {
+      const bankLabel = bankName === "Assai" ? "Assaí" : bankName;
       alerts.push({
-        title: `Fatura ${bankName} pendente`,
-        detail: `${money(summary.expense)} com vencimento em ${dateBR(cycle.dueDate)}.`,
+        title: "CARTÃO PENDENTE",
+        detail: `Fatura cartão ${bankLabel} vence em ${dateBR(cycle.dueDate)}.`,
       });
     }
   });
