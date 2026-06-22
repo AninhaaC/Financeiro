@@ -200,8 +200,8 @@
               <label>
                 <span>Tipo</span>
                 <select name="type" required>
+                  <option value="expense" selected>Saida</option>
                   <option value="income">Entrada</option>
-                  <option value="expense">Saida</option>
                 </select>
               </label>
               <label class="field-wide">
@@ -211,6 +211,7 @@
               <label>
                 <span>Categoria</span>
                 <select name="category" id="transactionCategory" required>
+                  <option value="" selected disabled>--</option>
                   <option value="Mercado">Mercado</option>
                   <option value="Alimenta&ccedil;&atilde;o">Alimenta&ccedil;&atilde;o</option>
                   <option value="Transporte">Transporte</option>
@@ -251,7 +252,7 @@
                   <option value="Sim">Sim</option>
                 </select>
               </label>
-              <label>
+              <label class="conditional-entry-field is-hidden" id="installmentCountField">
                 <span>Quantidade de parcelas</span>
                 <input type="number" name="installmentCount" id="installmentCount" min="2" max="120" value="2" disabled required />
               </label>
@@ -276,7 +277,7 @@
                   <option value="Sim">Sim</option>
                 </select>
               </label>
-              <label>
+              <label class="conditional-entry-field is-hidden" id="thirdPartyNameField">
                 <span>Nome do terceiro</span>
                 <select name="thirdPartyName" id="thirdPartyName" disabled>
                   <option value="Mae">M&atilde;e</option>
@@ -808,7 +809,7 @@
               <option value="Sim">Sim</option>
             </select>
           </label>
-          <label>
+          <label class="conditional-entry-field is-hidden" id="editThirdPartyNameField">
             <span>Nome do terceiro</span>
             <select name="thirdPartyName" id="editThirdPartyName" disabled>
               <option value="Mae">M&atilde;e</option>

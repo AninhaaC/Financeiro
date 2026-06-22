@@ -1170,6 +1170,10 @@ body.dark-mode .budget-row-over {
   display: none;
 }
 
+.conditional-entry-field.is-hidden {
+  display: none;
+}
+
 .smart-entry-form input:disabled {
   color: #9ba6a2;
   background: var(--soft-gray);

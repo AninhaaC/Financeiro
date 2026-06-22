@@ -1749,11 +1749,14 @@ function updateInstallmentFields() {
   const recurring = document.querySelector("#recurringSelect").value === "Sim";
   const installmentSelect = document.querySelector("#installmentSelect");
   const countInput = document.querySelector("#installmentCount");
+  const countField = document.querySelector("#installmentCountField");
   const amount = Number(form.elements.amount.value || 0);
   const count = installment ? Math.max(2, Number(countInput.value || 2)) : 1;
   if (recurring) installmentSelect.value = "Nao";
   installmentSelect.disabled = recurring;
-  countInput.disabled = recurring || !installment;
+  const showInstallmentCount = !recurring && installmentSelect.value === "Sim";
+  countField.classList.toggle("is-hidden", !showInstallmentCount);
+  countInput.disabled = !showInstallmentCount;
   const preview = document.querySelector("#installmentPreview");
   preview.textContent = recurring
     ? `O valor de ${money(amount)} sera repetido mensalmente por 12 meses.`
@@ -1764,9 +1767,24 @@ function updateInstallmentFields() {
 
 function updateThirdPartyFields(select, nameSelect) {
   const enabled = select.value === "Sim";
+  nameSelect.closest("label").classList.toggle("is-hidden", !enabled);
   nameSelect.disabled = !enabled;
   nameSelect.required = enabled;
   if (!enabled) nameSelect.value = "Mae";
+}
+
+function initializeTransactionFormDefaults() {
+  const form = document.querySelector("#transactionForm");
+  form.elements.date.value = localDateKey();
+  form.elements.type.value = "expense";
+  form.elements.category.value = "";
+  form.elements.installment.value = "Nao";
+  form.elements.recurring.value = "Nao";
+  form.elements.thirdParty.value = "Nao";
+  form.elements.installmentCount.value = 2;
+  updateCategoryField();
+  updateInstallmentFields();
+  updateThirdPartyFields(form.elements.thirdParty, form.elements.thirdPartyName);
 }
 
 document.querySelector("#transactionCategory").addEventListener("change", updateCategoryField);
@@ -1814,13 +1832,7 @@ document.querySelector("#transactionForm").addEventListener("submit", (event) =>
   data.transactions.push(...installments);
   activeTransactionMonth = installments[0].date.slice(0, 7);
   form.reset();
-  document.querySelector("#installmentCount").value = 2;
-  updateCategoryField();
-  updateInstallmentFields();
-  updateThirdPartyFields(
-    document.querySelector("#thirdPartySelect"),
-    document.querySelector("#thirdPartyName")
-  );
+  initializeTransactionFormDefaults();
   saveData();
   renderAll();
 });
@@ -1870,12 +1882,7 @@ document.querySelector("#debtForm").addEventListener("submit", (event) => {
 });
 
 renderTabs();
-updateCategoryField();
-updateInstallmentFields();
-updateThirdPartyFields(
-  document.querySelector("#thirdPartySelect"),
-  document.querySelector("#thirdPartyName")
-);
+initializeTransactionFormDefaults();
 document.querySelector("#goalMovementDate").value = localDateKey();
 renderAll();
 applyWishlistState();
