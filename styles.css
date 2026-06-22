@@ -1192,7 +1192,7 @@ body.dark-mode .budget-row-over {
 }
 
 .finance-table {
-  min-width: 1540px;
+  min-width: 1810px;
 }
 
 .monthly-tables {
@@ -1470,6 +1470,20 @@ body.dark-mode .budget-row-over {
 .status-select.pending {
   color: var(--red);
   background: var(--red-soft);
+}
+
+.finance-table tbody tr.third-party-row,
+.finance-table tbody tr.third-party-row:hover {
+  background: #e8f4fb;
+}
+
+.finance-table tbody tr.third-party-row td:first-child {
+  box-shadow: inset 4px 0 0 #29a3d6;
+}
+
+body.dark-mode .finance-table tbody tr.third-party-row,
+body.dark-mode .finance-table tbody tr.third-party-row:hover {
+  background: #17313d;
 }
 
 .row-menu-button {

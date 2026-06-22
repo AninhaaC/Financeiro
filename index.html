@@ -269,6 +269,20 @@
                   <option value="Sim">Sim</option>
                 </select>
               </label>
+              <label>
+                <span>Gastos por terceiro</span>
+                <select name="thirdParty" id="thirdPartySelect" required>
+                  <option value="Nao">N&atilde;o</option>
+                  <option value="Sim">Sim</option>
+                </select>
+              </label>
+              <label>
+                <span>Nome do terceiro</span>
+                <select name="thirdPartyName" id="thirdPartyName" disabled>
+                  <option value="Mae">M&atilde;e</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </label>
               <div class="form-submit">
                 <small id="installmentPreview">Um unico lancamento sera criado.</small>
                 <button class="primary-btn" type="submit">Adicionar lancamento</button>
@@ -785,6 +799,20 @@
             <select name="recurring" required>
               <option value="Nao">N&atilde;o</option>
               <option value="Sim">Sim</option>
+            </select>
+          </label>
+          <label>
+            <span>Gastos por terceiro</span>
+            <select name="thirdParty" id="editThirdPartySelect" required>
+              <option value="Nao">N&atilde;o</option>
+              <option value="Sim">Sim</option>
+            </select>
+          </label>
+          <label>
+            <span>Nome do terceiro</span>
+            <select name="thirdPartyName" id="editThirdPartyName" disabled>
+              <option value="Mae">M&atilde;e</option>
+              <option value="Outros">Outros</option>
             </select>
           </label>
         </div>

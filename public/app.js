@@ -182,6 +182,8 @@ function normalizeTransactions(transactions) {
     item.installmentCurrent = Number(item.installmentCurrent || 1);
     item.status ||= "paid";
     item.recurring ||= "Nao";
+    item.thirdParty ||= "Nao";
+    item.thirdPartyName ||= "";
     item.recurringGroupId ||= item.recurring === "Sim" ? item.installmentGroupId || null : null;
   });
 }
@@ -282,6 +284,10 @@ function sum(rows, predicate = () => true) {
   return rows.filter(predicate).reduce((total, item) => total + Number(item.amount || 0), 0);
 }
 
+function isCountableExpense(item) {
+  return item.type === "expense" && item.thirdParty !== "Sim";
+}
+
 function accountBalance(accountName) {
   const account = data.accounts.find((item) => item.name === accountName);
   const initial = Number(account?.balance || 0);
@@ -345,9 +351,9 @@ function getBankSummary(bankName, monthKey) {
   );
   const paidRows = allRows.filter((item) => item.status === "paid");
   const income = sum(paidRows, (item) => item.type === "income");
-  const expense = sum(allRows, (item) => item.type === "expense");
+  const expense = sum(allRows, isCountableExpense);
   const expenses = allRows
-    .filter((item) => item.type === "expense")
+    .filter(isCountableExpense)
     .sort((a, b) => b.date.localeCompare(a.date));
   return { rows: paidRows, expenses, income, expense, balance: Math.max(0, income - expense) };
 }
@@ -368,7 +374,7 @@ function switchTab(id) {
 function renderDashboard() {
   syncFixedReserveGoal();
   const rows = selectedMonthRows();
-  const expenses = rows.filter((item) => item.type === "expense");
+  const expenses = rows.filter(isCountableExpense);
   const expense = sum(expenses);
   const plan = getMonthlyPlan();
   const plannedIncome = Number(plan.viniciusSalary) + Number(plan.carolSalary) + Number(plan.bonus) + Number(plan.otherIncome);
@@ -416,7 +422,7 @@ function getMonthFinancialState(monthKey) {
   const actualIncome = sum(rows, (item) => item.type === "income");
   return {
     income: plannedIncome || actualIncome,
-    expense: sum(rows, (item) => item.type === "expense"),
+    expense: sum(rows, isCountableExpense),
   };
 }
 
@@ -461,7 +467,7 @@ function renderFlowChart() {
     return {
       shortLabel,
       income: sum(rows, (item) => item.type === "income"),
-      expense: sum(rows, (item) => item.type === "expense"),
+      expense: sum(rows, isCountableExpense),
       reserve: getReserveState(key).ending,
     };
   });
@@ -493,7 +499,7 @@ function calculatePreviousMonthRemainder() {
   const previous = new Date(selectedYear, selectedMonth - 2, 1);
   const key = `${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, "0")}`;
   const rows = data.transactions.filter((item) => item.date.startsWith(key));
-  return sum(rows, (item) => item.type === "income") - sum(rows, (item) => item.type === "expense");
+  return sum(rows, (item) => item.type === "income") - sum(rows, isCountableExpense);
 }
 
 function aggregateBy(rows, field) {
@@ -579,7 +585,7 @@ function renderDashboardAlerts(forecast, monthDate) {
     new Date(`${getDebtPayoffDate(debt)}T12:00:00`) <= monthEnd &&
     debt.currentInstallment < debt.installmentCount
   );
-  const pendingTransactions = selectedMonthRows().filter((item) => item.type === "expense" && item.status === "pending");
+  const pendingTransactions = selectedMonthRows().filter((item) => isCountableExpense(item) && item.status === "pending");
   const incompleteGoals = data.goals.filter((goal) => Number(goal.target) > 0 && goal.saved < goal.target);
   const alerts = [];
   pendingTransactions.slice(0, 3).forEach((item) => alerts.push({
@@ -682,7 +688,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
   const monthDate = new Date(`${monthKey}-01T12:00:00`);
   const monthLabel = monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const income = sum(visibleRows, (item) => item.type === "income");
-  const expense = sum(visibleRows, (item) => item.type === "expense");
+  const expense = sum(visibleRows, isCountableExpense);
   const pending = visibleRows.filter((item) => item.status === "pending").length;
 
   return `<section class="monthly-table-section">
@@ -715,12 +721,14 @@ function renderMonthlyTransactionTable(monthKey, rows) {
             <th>Parcela atual</th>
             <th>Status</th>
             <th>Recorrente</th>
+            <th>Gastos por terceiro</th>
+            <th>Nome do terceiro</th>
             <th></th>
           </tr>
         </thead>
         <tbody>${visibleRows.length
           ? visibleRows.map(renderTransactionRow).join("")
-          : '<tr><td class="filtered-empty-state" colspan="14">Nenhum lancamento nesta categoria para o mes selecionado.</td></tr>'
+          : '<tr><td class="filtered-empty-state" colspan="16">Nenhum lancamento nesta categoria para o mes selecionado.</td></tr>'
         }</tbody>
       </table>
     </div>
@@ -730,7 +738,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
 function renderTransactionRow(item) {
   const date = new Date(`${item.date}T12:00:00`);
   const monthName = date.toLocaleDateString("pt-BR", { month: "long" });
-  return `<tr>
+  return `<tr class="${item.thirdParty === "Sim" ? "third-party-row" : ""}">
     <td>${dateBR(item.date)}</td>
     <td>${monthName}</td>
     <td>${date.getFullYear()}</td>
@@ -749,6 +757,8 @@ function renderTransactionRow(item) {
       </select>
     </td>
     <td>${item.recurring}</td>
+    <td>${item.thirdParty}</td>
+    <td>${item.thirdParty === "Sim" ? item.thirdPartyName || "Nao informado" : "-"}</td>
     <td>
       <button class="row-menu-button" data-row-menu="${item.id}" type="button" aria-label="Opcoes de ${item.description}" title="Mais opcoes">&#8942;</button>
     </td>
@@ -782,6 +792,8 @@ function createTransactionInstallments(values) {
       installmentCurrent: 1,
       status: index === 0 ? values.status : "pending",
       recurring: "Sim",
+      thirdParty: values.thirdParty || "Nao",
+      thirdPartyName: values.thirdParty === "Sim" ? values.thirdPartyName : "",
     }));
   }
 
@@ -807,6 +819,8 @@ function createTransactionInstallments(values) {
     installmentCurrent: index + 1,
     status: index === 0 ? values.status : "pending",
     recurring: values.recurring,
+    thirdParty: values.thirdParty || "Nao",
+    thirdPartyName: values.thirdParty === "Sim" ? values.thirdPartyName : "",
   }));
 }
 
@@ -956,7 +970,7 @@ function applyTheme() {
 
 function renderBudget() {
   const monthRows = data.transactions.filter(
-    (item) => item.type === "expense" && item.date.startsWith(selectedPlanningMonth)
+    (item) => isCountableExpense(item) && item.date.startsWith(selectedPlanningMonth)
   );
   const budgets = data.budgets.filter((item) => item.month === selectedPlanningMonth);
   const totalPlanned = budgets.reduce((total, item) => total + Number(item.planned), 0);
@@ -1073,7 +1087,7 @@ function renderAnnual() {
     const key = `${selectedAnnualYear}-${String(index + 1).padStart(2, "0")}`;
     const rows = data.transactions.filter((item) => item.date.startsWith(key));
     const income = sum(rows, (item) => item.type === "income");
-    const expense = sum(rows, (item) => item.type === "expense");
+    const expense = sum(rows, isCountableExpense);
     return { label, shortLabel: shortLabels[index], income, expense, result: income - expense };
   });
 
@@ -1294,6 +1308,9 @@ function openEditTransaction(transaction) {
   setEditSelectValue(form.elements.payment, transaction.payment);
   form.elements.status.value = transaction.status;
   form.elements.recurring.value = transaction.recurring;
+  form.elements.thirdParty.value = transaction.thirdParty || "Nao";
+  form.elements.thirdPartyName.value = transaction.thirdPartyName || "Mae";
+  updateThirdPartyFields(form.elements.thirdParty, form.elements.thirdPartyName);
   dialog.showModal();
 }
 
@@ -1334,6 +1351,8 @@ function applyTransactionEdits(sourceTransaction, targets, values) {
     item.payment = values.payment;
     item.status = values.status;
     item.recurring = values.recurring;
+    item.thirdParty = values.thirdParty || "Nao";
+    item.thirdPartyName = values.thirdParty === "Sim" ? values.thirdPartyName : "";
   });
 }
 
@@ -1743,11 +1762,30 @@ function updateInstallmentFields() {
     : "Um unico lancamento sera criado.";
 }
 
+function updateThirdPartyFields(select, nameSelect) {
+  const enabled = select.value === "Sim";
+  nameSelect.disabled = !enabled;
+  nameSelect.required = enabled;
+  if (!enabled) nameSelect.value = "Mae";
+}
+
 document.querySelector("#transactionCategory").addEventListener("change", updateCategoryField);
 document.querySelector("#installmentSelect").addEventListener("change", updateInstallmentFields);
 document.querySelector("#installmentCount").addEventListener("input", updateInstallmentFields);
 document.querySelector("#recurringSelect").addEventListener("change", updateInstallmentFields);
 document.querySelector("#transactionForm").elements.amount.addEventListener("input", updateInstallmentFields);
+document.querySelector("#thirdPartySelect").addEventListener("change", () => {
+  updateThirdPartyFields(
+    document.querySelector("#thirdPartySelect"),
+    document.querySelector("#thirdPartyName")
+  );
+});
+document.querySelector("#editThirdPartySelect").addEventListener("change", () => {
+  updateThirdPartyFields(
+    document.querySelector("#editThirdPartySelect"),
+    document.querySelector("#editThirdPartyName")
+  );
+});
 
 document.addEventListener("change", (event) => {
   if (event.target.matches("#transactionCategoryFilter")) {
@@ -1779,6 +1817,10 @@ document.querySelector("#transactionForm").addEventListener("submit", (event) =>
   document.querySelector("#installmentCount").value = 2;
   updateCategoryField();
   updateInstallmentFields();
+  updateThirdPartyFields(
+    document.querySelector("#thirdPartySelect"),
+    document.querySelector("#thirdPartyName")
+  );
   saveData();
   renderAll();
 });
@@ -1830,6 +1872,10 @@ document.querySelector("#debtForm").addEventListener("submit", (event) => {
 renderTabs();
 updateCategoryField();
 updateInstallmentFields();
+updateThirdPartyFields(
+  document.querySelector("#thirdPartySelect"),
+  document.querySelector("#thirdPartyName")
+);
 document.querySelector("#goalMovementDate").value = localDateKey();
 renderAll();
 applyWishlistState();
