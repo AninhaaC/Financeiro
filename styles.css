@@ -1474,11 +1474,6 @@ body.dark-mode .budget-row-over {
   text-overflow: ellipsis;
 }
 
-.installment-label {
-  color: var(--petrol);
-  font-weight: 800;
-}
-
 .status-select {
   min-height: 30px;
   width: 104px;

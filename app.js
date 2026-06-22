@@ -717,7 +717,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
             <th>Descricao</th>
             <th>Categoria</th>
             <th>Valor</th>
-            <th>Forma de pagamento</th>
+            <th>Pagamento</th>
             <th>Parcelado</th>
             <th>Qtde.</th>
             <th>Parcela atual</th>
@@ -748,7 +748,7 @@ function renderTransactionRow(item) {
     <td>${item.payment}</td>
     <td>${item.installment}</td>
     <td>${item.installmentCount}</td>
-    <td class="installment-label">${item.installmentCurrent} de ${item.installmentCount}</td>
+    <td>${item.installment === "Sim" ? `${item.installmentCurrent}/${item.installmentCount}` : "--"}</td>
     <td>
       <select class="status-select ${item.status}" data-status-id="${item.id}" aria-label="Status de ${item.description}">
         <option value="paid" ${item.status === "paid" ? "selected" : ""}>Pago</option>
