@@ -116,7 +116,13 @@ function normalizeLoadedData(loaded) {
   loaded.bankCardSettings ||= {};
   loaded.bankInvoiceStatuses ||= {};
   ["Assai", "Inter", "Nubank"].forEach((bank) => {
-    loaded.bankCardSettings[bank] ||= { closingDay: 20, dueDay: 27, dueMonthOffset: 0 };
+    const settings = loaded.bankCardSettings[bank] || {};
+    loaded.bankCardSettings[bank] = {
+      closingDay: Math.min(31, Math.max(1, Number(settings.closingDay || 20))),
+      dueDay: Math.min(31, Math.max(1, Number(settings.dueDay || 27))),
+      dueMonthOffset: Math.min(1, Math.max(0, Number(settings.dueMonthOffset || 0))),
+      recurring: true,
+    };
     loaded.bankInvoiceStatuses[bank] ||= {};
   });
   loaded.transactions ||= [];
@@ -384,6 +390,17 @@ function getBankCycleDates(bankName, monthKey) {
   const dueMonth = monthKeyOffset(monthKey, Number(settings.dueMonthOffset || 0));
   const dueDate = dateForMonthDay(dueMonth, settings.dueDay);
   return { closingDate, dueDate };
+}
+
+function setRecurringBankCycle(bankName, closingDate, dueDate) {
+  const closingMonth = closingDate.slice(0, 7);
+  const dueMonth = dueDate.slice(0, 7);
+  data.bankCardSettings[bankName] = {
+    closingDay: Number(closingDate.slice(-2)),
+    dueDay: Number(dueDate.slice(-2)),
+    dueMonthOffset: Math.min(1, Math.max(0, monthDifference(`${closingMonth}-01`, `${dueMonth}-01`))),
+    recurring: true,
+  };
 }
 
 function getTransactionInvoiceMonth(item, bankName) {
@@ -1749,13 +1766,7 @@ document.querySelector("#editBankForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const values = Object.fromEntries(new FormData(form).entries());
-  const closingMonth = values.closingDate.slice(0, 7);
-  const dueMonth = values.dueDate.slice(0, 7);
-  data.bankCardSettings[values.bank] = {
-    closingDay: Number(values.closingDate.slice(-2)),
-    dueDay: Number(values.dueDate.slice(-2)),
-    dueMonthOffset: monthDifference(`${closingMonth}-01`, `${dueMonth}-01`),
-  };
+  setRecurringBankCycle(values.bank, values.closingDate, values.dueDate);
   saveData();
   form.closest("dialog").close();
   renderAll();
