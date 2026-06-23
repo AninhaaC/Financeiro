@@ -1349,6 +1349,41 @@ body.dark-mode .budget-row-over {
   cursor: pointer;
 }
 
+.transaction-filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-subcategory-filter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--panel);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.transaction-subcategory-filter span {
+  margin-right: 6px;
+  color: var(--muted);
+}
+
+.transaction-subcategory-filter select {
+  max-width: 150px;
+  padding: 2px 22px 2px 6px;
+  border: 0;
+  outline: 0;
+  color: var(--green);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
 .transaction-filter::before {
   content: "\25BE";
   margin-right: 7px;
@@ -1391,6 +1426,15 @@ body.dark-mode .budget-row-over {
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .transaction-filter-group {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .transaction-subcategory-filter {
+    justify-content: space-between;
   }
 }
 

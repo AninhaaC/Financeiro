@@ -68,6 +68,7 @@ const sampleData = {
 let data = loadData();
 let activeTransactionMonth = `${year}-${month}`;
 let selectedTransactionCategory = "all";
+let selectedOtherSubcategory = "all";
 let transactionDescriptionSearch = "";
 let selectedBankMonth = `${year}-${month}`;
 let selectedPlanningMonth = `${year}-${month}`;
@@ -746,6 +747,7 @@ function renderTransactions() {
 }
 
 function renderTransactionCategoryFilter() {
+  const customCategories = getCustomTransactionCategories();
   const filterLabel = selectedTransactionCategory === motherThirdPartyFilter
     ? "Mãe"
     : selectedTransactionCategory;
@@ -753,16 +755,43 @@ function renderTransactionCategoryFilter() {
     ? "Filtro"
     : `Filtro: ${filterLabel}`;
 
-  return `<label class="transaction-filter ${selectedTransactionCategory === "all" ? "" : "is-filtered"}">
-    <span>${label}</span>
-    <select id="transactionCategoryFilter" aria-label="Filtrar lancamentos por categoria">
-      <option value="all">Todas as categorias</option>
-      ${financialCategories.map((category) => `
-        <option value="${category}" ${category === selectedTransactionCategory ? "selected" : ""}>${category}</option>
-      `).join("")}
-      <option value="${motherThirdPartyFilter}" ${selectedTransactionCategory === motherThirdPartyFilter ? "selected" : ""}>Mãe</option>
-    </select>
-  </label>`;
+  return `<div class="transaction-filter-group">
+    <label class="transaction-filter ${selectedTransactionCategory === "all" ? "" : "is-filtered"}">
+      <span>${label}</span>
+      <select id="transactionCategoryFilter" aria-label="Filtrar lancamentos por categoria">
+        <option value="all">Todas as categorias</option>
+        ${financialCategories.map((category) => `
+          <option value="${category}" ${category === selectedTransactionCategory ? "selected" : ""}>${category}</option>
+        `).join("")}
+        <option value="${motherThirdPartyFilter}" ${selectedTransactionCategory === motherThirdPartyFilter ? "selected" : ""}>Mãe</option>
+      </select>
+    </label>
+    ${selectedTransactionCategory === "Outros" ? `
+      <label class="transaction-subcategory-filter">
+        <span>Subcategoria</span>
+        <select id="transactionSubcategoryFilter" aria-label="Filtrar subcategorias de Outros">
+          <option value="all">Todas</option>
+          ${customCategories.map((category) => `
+            <option value="${category}" ${category === selectedOtherSubcategory ? "selected" : ""}>${category}</option>
+          `).join("")}
+        </select>
+      </label>
+    ` : ""}
+  </div>`;
+}
+
+function getCustomTransactionCategories() {
+  const officialCategories = new Set(financialCategories.map(normalizeCategoryName));
+  const uniqueCategories = new Map();
+  data.transactions
+    .filter((item) => item.type === "expense" && !officialCategories.has(normalizeCategoryName(item.category)))
+    .forEach((item) => {
+      const normalized = normalizeCategoryName(item.category);
+      if (normalized && !uniqueCategories.has(normalized)) uniqueCategories.set(normalized, item.category);
+    });
+  return [...uniqueCategories.values()].sort((categoryA, categoryB) =>
+    categoryA.localeCompare(categoryB, "pt-BR", { sensitivity: "base" })
+  );
 }
 
 function renderTransactionMonthTab(monthKey, rows) {
@@ -778,7 +807,7 @@ function renderTransactionMonthTab(monthKey, rows) {
 
 function renderMonthlyTransactionTable(monthKey, rows) {
   const isMotherFilter = selectedTransactionCategory === motherThirdPartyFilter;
-  const categoryRows = selectedTransactionCategory === "all"
+  let categoryRows = selectedTransactionCategory === "all"
     ? rows
     : isMotherFilter
       ? rows.filter((item) =>
@@ -786,6 +815,11 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         normalizeCategoryName(item.thirdPartyName) === normalizeCategoryName("Mãe")
       )
       : rows.filter((item) => transactionMatchesBudgetCategory(item.category, selectedTransactionCategory));
+  if (selectedTransactionCategory === "Outros" && selectedOtherSubcategory !== "all") {
+    categoryRows = categoryRows.filter((item) =>
+      normalizeCategoryName(item.category) === normalizeCategoryName(selectedOtherSubcategory)
+    );
+  }
   const normalizedSearch = normalizeCategoryName(transactionDescriptionSearch);
   const visibleRows = normalizedSearch
     ? categoryRows.filter((item) => normalizeCategoryName(item.description).includes(normalizedSearch))
@@ -2060,6 +2094,12 @@ document.querySelector("#editThirdPartySelect").addEventListener("change", () =>
 document.addEventListener("change", (event) => {
   if (event.target.matches("#transactionCategoryFilter")) {
     selectedTransactionCategory = event.target.value;
+    if (selectedTransactionCategory !== "Outros") selectedOtherSubcategory = "all";
+    renderTransactions();
+    return;
+  }
+  if (event.target.matches("#transactionSubcategoryFilter")) {
+    selectedOtherSubcategory = event.target.value;
     renderTransactions();
     return;
   }
