@@ -243,7 +243,7 @@
               </label>
               <label>
                 <span>Forma de pagamento</span>
-                <select name="payment" required>
+                <select name="payment" id="paymentSelect" required>
                   <option value="Pix">Pix</option>
                   <option value="Assa&iacute;">Assa&iacute;</option>
                   <option value="Inter">Inter</option>
@@ -252,7 +252,7 @@
                   <option value="D&eacute;bito Carol">D&eacute;bito Carol</option>
                 </select>
               </label>
-              <label>
+              <label class="conditional-entry-field is-hidden" id="installmentField">
                 <span>Parcelado</span>
                 <select name="installment" id="installmentSelect" required>
                   <option value="Nao">N&atilde;o</option>
@@ -908,6 +908,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20260622-4"></script>
+    <script src="app.js?v=20260622-5"></script>
   </body>
 </html>

@@ -1967,16 +1967,20 @@ function updateDueDateField(categoryInput, dueDateInput) {
 
 function updateInstallmentFields() {
   const form = document.querySelector("#transactionForm");
-  const installment = document.querySelector("#installmentSelect").value === "Sim";
+  const payment = document.querySelector("#paymentSelect").value;
   const recurring = document.querySelector("#recurringSelect").value === "Sim";
   const installmentSelect = document.querySelector("#installmentSelect");
+  const installmentField = document.querySelector("#installmentField");
   const countInput = document.querySelector("#installmentCount");
   const countField = document.querySelector("#installmentCountField");
+  const cardPayment = ["Assai", "Inter", "Nubank"].includes(normalizeBankName(payment));
+  if (!cardPayment || recurring) installmentSelect.value = "Nao";
+  installmentField.classList.toggle("is-hidden", !cardPayment);
+  installmentSelect.disabled = !cardPayment || recurring;
+  const installment = cardPayment && !recurring && installmentSelect.value === "Sim";
   const amount = Number(form.elements.amount.value || 0);
   const count = installment ? Math.max(2, Number(countInput.value || 2)) : 1;
-  if (recurring) installmentSelect.value = "Nao";
-  installmentSelect.disabled = recurring;
-  const showInstallmentCount = !recurring && installmentSelect.value === "Sim";
+  const showInstallmentCount = installment;
   countField.classList.toggle("is-hidden", !showInstallmentCount);
   countInput.disabled = !showInstallmentCount;
   const preview = document.querySelector("#installmentPreview");
@@ -2016,6 +2020,7 @@ document.querySelector("#editTransactionForm").elements.category.addEventListene
 document.querySelector("#installmentSelect").addEventListener("change", updateInstallmentFields);
 document.querySelector("#installmentCount").addEventListener("input", updateInstallmentFields);
 document.querySelector("#recurringSelect").addEventListener("change", updateInstallmentFields);
+document.querySelector("#paymentSelect").addEventListener("change", updateInstallmentFields);
 document.querySelector("#transactionForm").elements.amount.addEventListener("input", updateInstallmentFields);
 document.querySelector("#thirdPartySelect").addEventListener("change", () => {
   updateThirdPartyFields(
