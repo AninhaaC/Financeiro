@@ -1429,9 +1429,9 @@ body.dark-mode .budget-row-over {
 }
 
 .monthly-table-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(220px, 1fr) minmax(430px, auto);
   align-items: center;
-  justify-content: space-between;
   gap: 18px;
   padding: 14px 16px;
   border-radius: 8px 8px 0 0;
@@ -1456,11 +1456,16 @@ body.dark-mode .budget-row-over {
   font-size: 0.74rem;
 }
 
+.monthly-table-search-slot {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
 .transaction-search {
   display: flex;
   align-items: center;
-  flex: 1 1 190px;
-  max-width: 260px;
+  width: min(100%, 290px);
   min-height: 32px;
   padding: 0 10px;
   border: 1px solid var(--line);
@@ -2592,6 +2597,21 @@ tbody tr:hover {
 }
 
 @media (max-width: 1120px) {
+  .monthly-table-head {
+    grid-template-columns: minmax(150px, 1fr) minmax(220px, 1fr);
+  }
+
+  .monthly-table-search-slot {
+    justify-content: flex-start;
+  }
+
+  .monthly-table-totals {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -2715,6 +2735,7 @@ tbody tr:hover {
   }
 
   .monthly-table-head {
+    display: flex;
     align-items: flex-start;
     flex-direction: column;
   }
@@ -2726,6 +2747,10 @@ tbody tr:hover {
   .transaction-search {
     width: 100%;
     max-width: none;
+  }
+
+  .monthly-table-search-slot {
+    width: 100%;
   }
 
   .edit-form-grid {

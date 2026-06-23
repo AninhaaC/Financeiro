@@ -804,17 +804,19 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         <strong>${monthLabel}</strong>
         <span>${visibleRows.length} ${visibleRows.length === 1 ? "lancamento" : "lancamentos"}</span>
       </div>
-      <label class="transaction-search">
-        <span aria-hidden="true">&#128269;</span>
-        <input
-          type="search"
-          id="transactionDescriptionSearch"
-          placeholder="Buscar por descricao"
-          aria-label="Buscar lancamentos por descricao"
-          value="${transactionDescriptionSearch.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}"
-          autocomplete="off"
-        />
-      </label>
+      <div class="monthly-table-search-slot">
+        <label class="transaction-search">
+          <span aria-hidden="true">&#128269;</span>
+          <input
+            type="search"
+            id="transactionDescriptionSearch"
+            placeholder="Buscar por descricao"
+            aria-label="Buscar lancamentos por descricao"
+            value="${transactionDescriptionSearch.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}"
+            autocomplete="off"
+          />
+        </label>
+      </div>
       <div class="monthly-table-totals">
         <span class="month-total income">Entradas: ${money(income)}</span>
         <span class="month-total expense">${isMotherFilter ? "A receber" : "Saidas"}: ${money(expense)}</span>
