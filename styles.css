@@ -1456,6 +1456,46 @@ body.dark-mode .budget-row-over {
   font-size: 0.74rem;
 }
 
+.transaction-search {
+  display: flex;
+  align-items: center;
+  flex: 1 1 190px;
+  max-width: 260px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--panel);
+}
+
+.transaction-search:focus-within {
+  border-color: var(--petrol);
+  box-shadow: 0 0 0 2px rgba(31, 103, 117, 0.12);
+}
+
+.transaction-search span {
+  flex: 0 0 auto;
+  margin-right: 7px;
+  font-size: 0.76rem;
+}
+
+.transaction-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.transaction-search input::placeholder {
+  color: var(--muted);
+}
+
 .monthly-table-totals {
   display: flex;
   flex-wrap: wrap;
@@ -2681,6 +2721,11 @@ tbody tr:hover {
 
   .monthly-table-totals {
     justify-content: flex-start;
+  }
+
+  .transaction-search {
+    width: 100%;
+    max-width: none;
   }
 
   .edit-form-grid {

@@ -68,6 +68,7 @@ const sampleData = {
 let data = loadData();
 let activeTransactionMonth = `${year}-${month}`;
 let selectedTransactionCategory = "all";
+let transactionDescriptionSearch = "";
 let selectedBankMonth = `${year}-${month}`;
 let selectedPlanningMonth = `${year}-${month}`;
 let selectedAnnualYear = year;
@@ -777,7 +778,7 @@ function renderTransactionMonthTab(monthKey, rows) {
 
 function renderMonthlyTransactionTable(monthKey, rows) {
   const isMotherFilter = selectedTransactionCategory === motherThirdPartyFilter;
-  const visibleRows = selectedTransactionCategory === "all"
+  const categoryRows = selectedTransactionCategory === "all"
     ? rows
     : isMotherFilter
       ? rows.filter((item) =>
@@ -785,6 +786,10 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         normalizeCategoryName(item.thirdPartyName) === normalizeCategoryName("Mãe")
       )
       : rows.filter((item) => transactionMatchesBudgetCategory(item.category, selectedTransactionCategory));
+  const normalizedSearch = normalizeCategoryName(transactionDescriptionSearch);
+  const visibleRows = normalizedSearch
+    ? categoryRows.filter((item) => normalizeCategoryName(item.description).includes(normalizedSearch))
+    : categoryRows;
   const monthDate = new Date(`${monthKey}-01T12:00:00`);
   const monthLabel = monthDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const income = sum(visibleRows, (item) => item.type === "income");
@@ -799,6 +804,17 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         <strong>${monthLabel}</strong>
         <span>${visibleRows.length} ${visibleRows.length === 1 ? "lancamento" : "lancamentos"}</span>
       </div>
+      <label class="transaction-search">
+        <span aria-hidden="true">&#128269;</span>
+        <input
+          type="search"
+          id="transactionDescriptionSearch"
+          placeholder="Buscar por descricao"
+          aria-label="Buscar lancamentos por descricao"
+          value="${transactionDescriptionSearch.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}"
+          autocomplete="off"
+        />
+      </label>
       <div class="monthly-table-totals">
         <span class="month-total income">Entradas: ${money(income)}</span>
         <span class="month-total expense">${isMotherFilter ? "A receber" : "Saidas"}: ${money(expense)}</span>
@@ -827,7 +843,11 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         </thead>
         <tbody>${visibleRows.length
           ? visibleRows.map(renderTransactionRow).join("")
-          : '<tr><td class="filtered-empty-state" colspan="13">Nenhum lancamento nesta categoria para o mes selecionado.</td></tr>'
+          : `<tr><td class="filtered-empty-state" colspan="13">${
+            normalizedSearch
+              ? "Nenhum lancamento encontrado com essa descricao."
+              : "Nenhum lancamento nesta categoria para o mes selecionado."
+          }</td></tr>`
         }</tbody>
       </table>
     </div>
@@ -2055,6 +2075,18 @@ document.addEventListener("change", (event) => {
   transaction.status = statusSelect.value;
   saveData();
   renderAll();
+});
+
+document.addEventListener("input", (event) => {
+  if (!event.target.matches("#transactionDescriptionSearch")) return;
+  transactionDescriptionSearch = event.target.value;
+  const cursorPosition = event.target.selectionStart;
+  renderTransactions();
+  requestAnimationFrame(() => {
+    const searchInput = document.querySelector("#transactionDescriptionSearch");
+    searchInput?.focus();
+    searchInput?.setSelectionRange(cursorPosition, cursorPosition);
+  });
 });
 
 document.querySelector("#transactionForm").addEventListener("submit", (event) => {
