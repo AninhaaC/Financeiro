@@ -292,6 +292,14 @@ function money(value) {
   return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function shortMoney(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
+}
+
 function dateBR(value) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -557,16 +565,34 @@ function renderFlowChart() {
       reserve: getReserveState(key).ending,
     };
   });
-  const maxValue = Math.max(1, ...monthly.flatMap((item) => [item.income, item.expense, Math.max(0, item.reserve)]));
-  document.querySelector("#flowChart").innerHTML = monthly.map((item) => `
-    <div class="annual-bar-group" title="${item.shortLabel}: entradas ${money(item.income)}, saidas ${money(item.expense)}, reserva ${money(item.reserve)}">
-      <div class="annual-bars">
-        <span class="annual-bar" style="height:${Math.max(2, (item.income / maxValue) * 100)}%"></span>
-        <span class="annual-bar expense" style="height:${Math.max(2, (item.expense / maxValue) * 100)}%"></span>
-        <span class="annual-bar reserve" style="height:${Math.max(2, (Math.max(0, item.reserve) / maxValue) * 100)}%"></span>
+  const rawMaxValue = Math.max(1, ...monthly.flatMap((item) => [item.income, item.expense, Math.max(0, item.reserve)]));
+  const step = rawMaxValue <= 5000 ? 500 : 1000;
+  const maxValue = Math.max(step, Math.ceil(rawMaxValue / step) * step);
+  const tickValues = Array.from({ length: Math.floor(maxValue / step) + 1 }, (_, index) => maxValue - index * step);
+  document.querySelector("#flowChart").innerHTML = `
+    <div class="chart-scale" aria-hidden="true">
+      ${tickValues.map((value) => `
+        <span style="bottom:${(value / maxValue) * 100}%">
+          <strong>${shortMoney(value)}</strong>
+        </span>
+      `).join("")}
+    </div>
+    <div class="dashboard-chart-plot">
+      <div class="chart-grid-lines" aria-hidden="true">
+        ${tickValues.map((value) => `<span style="bottom:${(value / maxValue) * 100}%"></span>`).join("")}
       </div>
-      <span>${item.shortLabel}</span>
-    </div>`).join("");
+      <div class="dashboard-bar-grid">
+        ${monthly.map((item) => `
+          <div class="annual-bar-group" title="${item.shortLabel}: entradas ${money(item.income)}, saidas ${money(item.expense)}, reserva ${money(item.reserve)}">
+            <div class="annual-bars">
+              <span class="annual-bar" style="height:${Math.max(2, (item.income / maxValue) * 100)}%"></span>
+              <span class="annual-bar expense" style="height:${Math.max(2, (item.expense / maxValue) * 100)}%"></span>
+              <span class="annual-bar reserve" style="height:${Math.max(2, (Math.max(0, item.reserve) / maxValue) * 100)}%"></span>
+            </div>
+            <span>${item.shortLabel}</span>
+          </div>`).join("")}
+      </div>
+    </div>`;
 }
 
 function getMonthlyPlan() {

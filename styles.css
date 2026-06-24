@@ -2609,11 +2609,65 @@ tbody tr:hover {
 }
 
 .dashboard-annual-chart {
+  position: relative;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
   min-height: 300px;
+  padding-top: 8px;
 }
 
-.dashboard-annual-chart .annual-bar-group {
+.dashboard-chart-plot {
+  position: relative;
+  min-width: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboard-bar-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(26px, 1fr));
+  align-items: end;
+  gap: 8px;
+  height: 100%;
+}
+
+.dashboard-bar-grid .annual-bar-group {
   height: 270px;
+}
+
+.chart-scale {
+  position: relative;
+  min-height: 270px;
+  padding-right: 8px;
+}
+
+.chart-scale span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.chart-scale strong {
+  font: inherit;
+}
+
+.chart-grid-lines {
+  position: absolute;
+  inset: 0 0 24px;
+  pointer-events: none;
+}
+
+.chart-grid-lines span {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px solid rgba(109, 125, 121, 0.18);
 }
 
 .annual-bar-group {
@@ -2754,6 +2808,14 @@ tbody tr:hover {
       "categories"
       "goals"
       "alerts";
+  }
+
+  .dashboard-annual-chart {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .chart-scale span {
+    font-size: 0.56rem;
   }
 
   .smart-entry-form {
