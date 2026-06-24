@@ -832,7 +832,14 @@ function renderTransactionPagination(monthKey, currentPage, totalPages, totalRow
   if (totalRows <= 10) return "";
   return `<div class="transaction-pagination" aria-label="Paginacao dos lancamentos">
     <button type="button" data-transaction-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""} aria-label="Pagina anterior">&lt;</button>
-    <span>Pagina ${currentPage} de ${totalPages}</span>
+    <label class="transaction-page-select" aria-label="Selecionar pagina">
+      <select data-transaction-page-select>
+        ${Array.from({ length: totalPages }, (_, index) => {
+          const pageNumber = index + 1;
+          return `<option value="${pageNumber}" ${pageNumber === currentPage ? "selected" : ""}>${pageNumber}</option>`;
+        }).join("")}
+      </select>
+    </label>
     <button type="button" data-transaction-page="${currentPage + 1}" ${currentPage === totalPages ? "disabled" : ""} aria-label="Proxima pagina">&gt;</button>
   </div>`;
 }
@@ -2154,6 +2161,11 @@ document.addEventListener("change", (event) => {
   if (event.target.matches("#transactionSubcategoryFilter")) {
     selectedOtherSubcategory = event.target.value;
     transactionPageByMonth[activeTransactionMonth] = 1;
+    renderTransactions();
+    return;
+  }
+  if (event.target.matches("[data-transaction-page-select]")) {
+    transactionPageByMonth[activeTransactionMonth] = Number(event.target.value);
     renderTransactions();
     return;
   }

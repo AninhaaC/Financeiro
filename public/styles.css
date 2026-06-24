@@ -1503,12 +1503,38 @@ body.dark-mode .budget-row-over {
   opacity: 0.45;
 }
 
-.transaction-pagination span {
-  min-width: 96px;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
+.transaction-page-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.transaction-page-select select {
+  width: 48px;
+  height: 30px;
+  padding: 0 20px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--panel);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
   text-align: center;
+  cursor: pointer;
+  appearance: none;
+}
+
+.transaction-page-select::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  border-top: 5px solid var(--muted);
+  pointer-events: none;
 }
 
 .monthly-table-head {
