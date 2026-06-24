@@ -667,6 +667,7 @@ function renderDashboardAlerts(forecast, monthDate) {
   );
   const pendingTransactions = selectedMonthRows().filter((item) => {
     if (!isCountableExpense(item) || item.status !== "pending") return false;
+    if (normalizeCategoryName(item.category) !== normalizeCategoryName("Contas")) return false;
     if (!item.dueDate) return false;
     return daysUntil(item.dueDate) <= 7;
   });
