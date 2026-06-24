@@ -682,7 +682,7 @@ function renderDashboardAlerts(forecast, monthDate) {
   });
   pendingTransactions.slice(0, 3).forEach((item) => alerts.push({
     title: "Conta pendente",
-    detail: `${item.description}: ${money(item.amount)} vence em ${dateBR(item.date)}.`,
+    detail: `${item.description}: ${money(item.amount)} vence em ${dateBR(item.dueDate || item.date)}.`,
   }));
   pendingDebts.forEach((debt) => alerts.push({
     title: "Conta pendente",
@@ -1514,13 +1514,18 @@ function shiftSeriesDate(dateString, monthOffset, preferredDay) {
 function applyTransactionEdits(sourceTransaction, targets, values) {
   const offset = monthDifference(sourceTransaction.date, values.date);
   const preferredDay = Number(values.date.slice(-2));
+  const isBills = normalizeCategoryName(values.category) === normalizeCategoryName("Contas");
+  const sourceDueDate = sourceTransaction.dueDate || sourceTransaction.date;
+  const dueOffset = values.dueDate ? monthDifference(sourceDueDate, values.dueDate) : offset;
+  const preferredDueDay = values.dueDate ? Number(values.dueDate.slice(-2)) : preferredDay;
   targets.forEach((item) => {
+    const currentDueDate = item.dueDate || item.date;
     item.date = shiftSeriesDate(item.date, offset, preferredDay);
     item.type = values.type;
     item.description = values.description.trim();
     item.category = values.category.trim();
-    item.dueDate = normalizeCategoryName(values.category) === normalizeCategoryName("Contas")
-      ? values.dueDate || ""
+    item.dueDate = isBills
+      ? shiftSeriesDate(currentDueDate, dueOffset, preferredDueDay)
       : "";
     item.amount = Number(values.amount);
     item.payment = values.payment;
