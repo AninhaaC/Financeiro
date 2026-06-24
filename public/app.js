@@ -667,8 +667,8 @@ function renderDashboardAlerts(forecast, monthDate) {
   );
   const pendingTransactions = selectedMonthRows().filter((item) => {
     if (!isCountableExpense(item) || item.status !== "pending") return false;
-    const dueDate = item.dueDate || item.date;
-    return daysUntil(dueDate) <= 7;
+    if (!item.dueDate) return false;
+    return daysUntil(item.dueDate) <= 7;
   });
   const incompleteGoals = data.goals.filter((goal) =>
     Number(goal.target) > 0 &&
@@ -692,7 +692,7 @@ function renderDashboardAlerts(forecast, monthDate) {
   });
   pendingTransactions.slice(0, 3).forEach((item) => alerts.push({
     title: "Conta pendente",
-    detail: `${item.description}: ${money(item.amount)} vence em ${dateBR(item.dueDate || item.date)}.`,
+    detail: `${item.description}: ${money(item.amount)} vence em ${dateBR(item.dueDate)}.`,
   }));
   pendingDebts.forEach((debt) => alerts.push({
     title: "Conta pendente",
