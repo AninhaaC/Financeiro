@@ -549,11 +549,11 @@ function renderFlowChart() {
   const shortLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const monthly = shortLabels.map((shortLabel, index) => {
     const key = `${selectedYear}-${String(index + 1).padStart(2, "0")}`;
-    const rows = data.transactions.filter((item) => item.date.startsWith(key));
+    const state = getMonthFinancialState(key);
     return {
       shortLabel,
-      income: sum(rows, (item) => item.type === "income"),
-      expense: sum(rows, isCountableExpense),
+      income: state.income,
+      expense: state.expense,
       reserve: getReserveState(key).ending,
     };
   });
