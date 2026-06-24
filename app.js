@@ -204,6 +204,11 @@ function normalizeTransactions(transactions) {
     item.thirdParty ||= "Nao";
     item.thirdPartyName ||= "";
     item.dueDate ||= "";
+    const isBills = normalizeCategoryName(item.category) === normalizeCategoryName("Contas");
+    if (!isBills) item.dueDate = "";
+    item.dueDateExplicit = isBills && item.dueDate
+      ? item.dueDateExplicit === true || item.dueDateExplicit === "Sim" || item.dueDate !== item.date
+      : false;
     item.recurringGroupId ||= item.recurring === "Sim" ? item.installmentGroupId || null : null;
   });
 }
@@ -669,6 +674,7 @@ function renderDashboardAlerts(forecast, monthDate) {
     if (!isCountableExpense(item) || item.status !== "pending") return false;
     if (normalizeCategoryName(item.category) !== normalizeCategoryName("Contas")) return false;
     if (!item.dueDate) return false;
+    if (item.dueDateExplicit !== true) return false;
     return daysUntil(item.dueDate) <= 7;
   });
   const incompleteGoals = data.goals.filter((goal) =>
@@ -956,6 +962,7 @@ function createTransactionInstallments(values) {
       thirdParty: values.thirdParty || "Nao",
       thirdPartyName: values.thirdParty === "Sim" ? values.thirdPartyName : "",
       dueDate: values.category === "Contas" && values.dueDate ? addMonthsToDate(values.dueDate, index) : "",
+      dueDateExplicit: values.category === "Contas" && Boolean(values.dueDate),
     }));
   }
 
@@ -984,6 +991,7 @@ function createTransactionInstallments(values) {
     thirdParty: values.thirdParty || "Nao",
     thirdPartyName: values.thirdParty === "Sim" ? values.thirdPartyName : "",
     dueDate: values.category === "Contas" && values.dueDate ? addMonthsToDate(values.dueDate, index) : "",
+    dueDateExplicit: values.category === "Contas" && Boolean(values.dueDate),
   }));
 }
 
@@ -1538,6 +1546,7 @@ function applyTransactionEdits(sourceTransaction, targets, values) {
     item.dueDate = isBills
       ? shiftSeriesDate(currentDueDate, dueOffset, preferredDueDay)
       : "";
+    item.dueDateExplicit = isBills && Boolean(values.dueDate);
     item.amount = Number(values.amount);
     item.payment = values.payment;
     item.status = values.status;
