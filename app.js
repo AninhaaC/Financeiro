@@ -70,6 +70,7 @@ let activeTransactionMonth = `${year}-${month}`;
 let selectedTransactionCategory = "all";
 let selectedOtherSubcategory = "all";
 let transactionDescriptionSearch = "";
+let transactionPageByMonth = {};
 let selectedBankMonth = `${year}-${month}`;
 let selectedPlanningMonth = `${year}-${month}`;
 let selectedAnnualYear = year;
@@ -822,6 +823,20 @@ function renderTransactionMonthTab(monthKey, rows) {
   </button>`;
 }
 
+function getTransactionPage(monthKey, totalPages) {
+  const currentPage = Number(transactionPageByMonth[monthKey] || 1);
+  return Math.min(Math.max(1, currentPage), totalPages);
+}
+
+function renderTransactionPagination(monthKey, currentPage, totalPages, totalRows) {
+  if (totalRows <= 10) return "";
+  return `<div class="transaction-pagination" aria-label="Paginacao dos lancamentos">
+    <button type="button" data-transaction-page="${currentPage - 1}" ${currentPage === 1 ? "disabled" : ""} aria-label="Pagina anterior">&lt;</button>
+    <span>Pagina ${currentPage} de ${totalPages}</span>
+    <button type="button" data-transaction-page="${currentPage + 1}" ${currentPage === totalPages ? "disabled" : ""} aria-label="Proxima pagina">&gt;</button>
+  </div>`;
+}
+
 function renderMonthlyTransactionTable(monthKey, rows) {
   const isMotherFilter = selectedTransactionCategory === motherThirdPartyFilter;
   let categoryRows = selectedTransactionCategory === "all"
@@ -848,6 +863,11 @@ function renderMonthlyTransactionTable(monthKey, rows) {
     ? (item) => item.type === "expense"
     : isCountableExpense);
   const pending = visibleRows.filter((item) => item.status === "pending").length;
+  const rowsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
+  const currentPage = getTransactionPage(monthKey, totalPages);
+  transactionPageByMonth[monthKey] = currentPage;
+  const pageRows = visibleRows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return `<section class="monthly-table-section">
     <div class="monthly-table-head">
@@ -895,7 +915,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
           </tr>
         </thead>
         <tbody>${visibleRows.length
-          ? visibleRows.map(renderTransactionRow).join("")
+          ? pageRows.map(renderTransactionRow).join("")
           : `<tr><td class="filtered-empty-state" colspan="13">${
             normalizedSearch
               ? "Nenhum lancamento encontrado com essa descricao."
@@ -904,6 +924,7 @@ function renderMonthlyTransactionTable(monthKey, rows) {
         }</tbody>
       </table>
     </div>
+    ${renderTransactionPagination(monthKey, currentPage, totalPages, visibleRows.length)}
   </section>`;
 }
 
@@ -1623,6 +1644,7 @@ document.addEventListener("click", (event) => {
   const removeButton = event.target.closest("[data-remove]");
   const monthButton = event.target.closest("[data-transaction-month]");
   const monthScrollButton = event.target.closest("[data-month-scroll]");
+  const transactionPageButton = event.target.closest("[data-transaction-page]");
   const rowMenuButton = event.target.closest("[data-row-menu]");
   const rowActionButton = event.target.closest("[data-row-action]");
   const goalMenuButton = event.target.closest("[data-goal-menu]");
@@ -1730,6 +1752,11 @@ document.addEventListener("click", (event) => {
   if (monthScrollButton) {
     const tabsContainer = document.querySelector("#transactionMonthTabs");
     tabsContainer?.scrollBy({ left: Number(monthScrollButton.dataset.monthScroll) * 360, behavior: "smooth" });
+  }
+  if (transactionPageButton) {
+    transactionPageByMonth[activeTransactionMonth] = Number(transactionPageButton.dataset.transactionPage);
+    renderTransactions();
+    return;
   }
   if (removeButton) {
     const collection = removeButton.dataset.remove;
@@ -2120,11 +2147,13 @@ document.addEventListener("change", (event) => {
   if (event.target.matches("#transactionCategoryFilter")) {
     selectedTransactionCategory = event.target.value;
     if (selectedTransactionCategory !== "Outros") selectedOtherSubcategory = "all";
+    transactionPageByMonth[activeTransactionMonth] = 1;
     renderTransactions();
     return;
   }
   if (event.target.matches("#transactionSubcategoryFilter")) {
     selectedOtherSubcategory = event.target.value;
+    transactionPageByMonth[activeTransactionMonth] = 1;
     renderTransactions();
     return;
   }
@@ -2147,6 +2176,7 @@ document.addEventListener("change", (event) => {
 document.addEventListener("input", (event) => {
   if (!event.target.matches("#transactionDescriptionSearch")) return;
   transactionDescriptionSearch = event.target.value;
+  transactionPageByMonth[activeTransactionMonth] = 1;
   const cursorPosition = event.target.selectionStart;
   renderTransactions();
   requestAnimationFrame(() => {

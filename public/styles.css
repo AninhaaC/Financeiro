@@ -1472,6 +1472,45 @@ body.dark-mode .budget-row-over {
   background: #8a918f;
 }
 
+.transaction-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.transaction-pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--green);
+  background: var(--soft-gray);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.transaction-pagination button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.transaction-pagination span {
+  min-width: 96px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .monthly-table-head {
   display: grid;
   grid-template-columns: minmax(150px, 0.8fr) minmax(220px, 1fr) minmax(430px, auto);
