@@ -298,6 +298,12 @@ function localDateKey(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function daysUntil(dateString, referenceDate = today) {
+  const dueDate = new Date(`${dateString}T12:00:00`);
+  const baseDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12, 0, 0);
+  return Math.ceil((dueDate - baseDate) / 86400000);
+}
+
 function currentMonthRows() {
   return data.transactions.filter((item) => item.date.startsWith(`${year}-${month}`));
 }
@@ -659,7 +665,11 @@ function renderDashboardAlerts(forecast, monthDate) {
     new Date(`${getDebtPayoffDate(debt)}T12:00:00`) <= monthEnd &&
     debt.currentInstallment < debt.installmentCount
   );
-  const pendingTransactions = selectedMonthRows().filter((item) => isCountableExpense(item) && item.status === "pending");
+  const pendingTransactions = selectedMonthRows().filter((item) => {
+    if (!isCountableExpense(item) || item.status !== "pending") return false;
+    const dueDate = item.dueDate || item.date;
+    return daysUntil(dueDate) <= 7;
+  });
   const incompleteGoals = data.goals.filter((goal) =>
     Number(goal.target) > 0 &&
     Number(goal.saved) < Number(goal.target) &&
